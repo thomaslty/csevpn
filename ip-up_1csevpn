@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# The  environment is cleared before executing this script
+# so the path must be reset
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+export PATH
+
+# These variables are for the use of the scripts run by run-parts
+PPP_IFACE="$1"
+PPP_TTY="$2"
+PPP_SPEED="$3"
+PPP_LOCAL="$4"
+PPP_REMOTE="$5"
+PPP_IPPARAM="$6"
+export PPP_IFACE PPP_TTY PPP_SPEED PPP_LOCAL PPP_REMOTE PPP_IPPARAM
+
+status=1
+if [ -n "$PPP_REMOTE" -a -n "$PPP_IFACE" ]; then
+    save_route=/var/run/ppp-${PPP_REMOTE}.route
+    release=`lsb_release -sr`
+    if [ x$release != 'x16.04' ]; then
+	ip route delete $PPP_REMOTE dev $PPP_IFACE
+    fi
+    getent hosts vpn.cse.cuhk.edu.hk | grep $PPP_REMOTE > /dev/null 2>&1
+    status=$?
+fi
+
+if [ $status -eq 0 ]; then
+    ip route add 137.189.88.0/22 dev $PPP_IFACE
+
+    if [ -f $save_route ]; then
+       	ip route replace default dev $PPP_IFACE
+    fi
+fi

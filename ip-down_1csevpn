@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# The  environment is cleared before executing this script
+# so the path must be reset
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+export PATH
+
+PPP_REMOTE="$5"
+export PPP_REMOTE
+
+save_route=/var/run/ppp-${PPP_REMOTE}.route
+
+## restore default route
+if [ -f $save_route ]; then
+    ip route restore < $save_route
+    rm $save_route
+fi

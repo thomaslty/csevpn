@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# DEFAULT_ROUTE=Y if you want all traffic through PPP
+DEFAULT_ROUTE=N
+
+# The  environment is cleared before executing this script
+# so the path must be reset
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+export PATH
+
+# These variables are for the use of the scripts run by run-parts
+PPP_IFACE="$1"
+PPP_TTY="$2"
+PPP_SPEED="$3"
+PPP_LOCAL="$4"
+PPP_REMOTE="$5"
+PPP_IPPARAM="$6"
+export PPP_IFACE PPP_TTY PPP_SPEED PPP_LOCAL PPP_REMOTE PPP_IPPARAM
+
+if [ -n "$PPP_REMOTE" ]; then
+    GW=`ip route get $PPP_REMOTE | grep via | grep -v ppp | awk '{print $3}'`
+    ip route replace $PPP_REMOTE via $GW
+
+    if [ "x$DEFAULT_ROUTE" = "xY" ]; then
+        ip route save default > /var/run/ppp-${PPP_REMOTE}.route
+    fi
+fi
